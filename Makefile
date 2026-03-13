@@ -87,7 +87,7 @@ dev:
 	 .
 
 docker:
-	GOARCH=amd64 GOOS=linux ${GOBIN} build -trimpath\
+	env CGO_ENABLED=0 GOARCH=amd64 GOOS=linux ${GOBIN} build -trimpath\
 	 -ldflags "-X github.com/pydio/cells/v5/common.version=${CELLS_VERSION}\
 	 -X github.com/pydio/cells/v5/common.BuildStamp=${TODAY}\
 	 -X github.com/pydio/cells/v5/common.BuildRevision=${GITREV}"\

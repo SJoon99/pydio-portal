@@ -44,3 +44,5 @@ frontend/front-srv/*
 install*.yaml
 
 .claude
+# Ignore built Docker image tarballs
+img/
