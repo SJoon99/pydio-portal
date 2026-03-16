@@ -300,23 +300,6 @@ let RailPanel = ({
             },
         },
         {
-            id:'superset',
-            icon: 'chart-box-outline',
-            position:'top',
-            text: MessageHash['ajax_gui.leftrail.buttons.superset'] || 'Superset',
-            ignore: !supersetUrl,
-            active: activePanel === 'superset',
-            onClick: () => {
-                if (activePanel === 'superset') {
-                    setActivePanel('');
-                    return;
-                }
-                setActivePanel('superset');
-                setHover(false);
-            },
-            activeBar: supersetBar
-        },
-        {
             id:'files',
             icon: 'folder-multiple-outline',
             position:'top',
@@ -372,6 +355,22 @@ let RailPanel = ({
                 )
             },
             hoverWidth: 320
+        },
+        {
+            id:'superset',
+            icon: 'chart-box-outline',
+            position:'top',
+            text: MessageHash['ajax_gui.leftrail.buttons.superset'] || 'Superset',
+            active: activePanel === 'superset',
+            onClick: () => {
+                if (activePanel === 'superset') {
+                    setActivePanel('');
+                    return;
+                }
+                setActivePanel('superset');
+                setHover(false);
+            },
+            fullBar: supersetBar
         },
         {
             id: 'notifications',
@@ -451,6 +450,15 @@ let RailPanel = ({
             setHover(!!def.hoverBar)
         }
         def.hover = hover && hoverBarDef && hoverBarDef.id === def.id
+
+        const originalOnClick = def.onClick;
+        def.onClick = () => {
+            if (def.id !== 'superset' && activePanel === 'superset') {
+                setActivePanel(def.id === 'files' ? 'files' : '');
+            }
+            if (originalOnClick) originalOnClick();
+        };
+
         if (!def.action) {
             return def
         }
@@ -459,7 +467,10 @@ let RailPanel = ({
             return {...def, ignore: true}
         }
         let {icon = a.options.icon_class, text = MessageHash[a.options.text_id]} = def;
-        return {...def, icon, text, onClick: () => a.options.callback()}
+        return {...def, icon, text, onClick: () => {
+            if (activePanel === 'superset') setActivePanel('');
+            a.options.callback();
+        }}
     }
 
     const showStickToggle = hoverBarDef && hoverBarDef.activeBar && activePanel !== hoverBarDef.id
@@ -480,10 +491,15 @@ let RailPanel = ({
     const activeBarMaxWidth = 350
     const activeBarSmall = resizerWidth <= 130
     let activeBar
+    let fullBar
     if (!closed && activePanel) {
         const aa = toolbars.filter(a =>  a.id === activePanel && a.activeBar)
         if (aa.length) {
             activeBar = aa[0].activeBar('')
+        }
+        const ff = toolbars.filter(a => a.id === activePanel && a.fullBar)
+        if (ff.length) {
+            fullBar = ff[0].fullBar('')
         }
     }
     let hoverStyle = {
@@ -568,6 +584,21 @@ let RailPanel = ({
                     <div className={"vertical_fit"}/>
                     <div>{loaded.filter(a => a.position==='bottom').map((b, i, a) => <RailIcon iconOnly {...b} last={i === a.length - 1}/>)}</div>
                 </div>
+
+                {fullBar && (
+                    <div style={{
+                        position: 'absolute',
+                        left: railWidth,
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                        zIndex: 900,
+                        backgroundColor: 'var(--md-sys-color-surface)'
+                    }}>
+                        {fullBar}
+                        {showCloseToggle && <div style={{...closerStyle}} onClick={() => setActivePanel('')}><span className={"mdi mdi-close"}/></div>}
+                    </div>
+                )}
 
                 {activeBar &&
                     <Resizable
