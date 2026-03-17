@@ -318,10 +318,16 @@ func (s *Handler) storageClientForDatasource(ds *object.DataSource) (nodes.Stora
 	_ = cfData.Val("secure").Set(secure)
 	_ = cfData.Val("type").Set("mc")
 	if r, o := ds.StorageConfiguration[object.StorageKeyCustomRegion]; o && r != "" {
-		_ = cfData.Val("customRegion").Set(r)
+		_ = cfData.Val("region").Set(r)
 	}
 	if sv, o := ds.StorageConfiguration[object.StorageKeySignatureVersion]; o && sv != "" {
 		_ = cfData.Val("signature").Set(sv)
+	}
+	if ps, o := ds.StorageConfiguration[object.StorageKeyPathStyle]; o {
+		_ = cfData.Val(object.StorageKeyPathStyle).Set(ps == "true")
+	}
+	if fps, o := ds.StorageConfiguration[object.StorageKeyForcePathStyle]; o {
+		_ = cfData.Val(object.StorageKeyForcePathStyle).Set(fps == "true")
 	}
 
 	return nodes.NewStorageClient(cfData)

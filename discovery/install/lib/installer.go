@@ -186,6 +186,10 @@ func PerformCheck(ctx context.Context, name string, c *install.InstallConfig) (*
 		if r := c.GetDsS3CustomRegion(); r != "" {
 			cfData.Val("region").Set(r)
 		}
+		if c.GetDsS3Custom() != "" {
+			cfData.Val(object.StorageKeyPathStyle).Set(true)
+			cfData.Val(object.StorageKeyForcePathStyle).Set(true)
+		}
 		if isMinio {
 			cfData.Val("minioServer").Set(true)
 		}
@@ -238,6 +242,10 @@ func PerformCheck(ctx context.Context, name string, c *install.InstallConfig) (*
 		cfData.Val("key").Set(c.GetDsS3ApiKey())
 		cfData.Val("secret").Set(c.GetDsS3ApiSecret())
 		cfData.Val("secure").Set(secure)
+		if c.GetDsS3Custom() != "" {
+			cfData.Val(object.StorageKeyPathStyle).Set(true)
+			cfData.Val(object.StorageKeyForcePathStyle).Set(true)
+		}
 		mc, e := nodes.NewStorageClient(cfData)
 		if e != nil {
 			wrapError(e)

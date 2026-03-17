@@ -95,14 +95,18 @@ func New(endpoint, accessKey, secretKey, signatureVersion string, secure bool, c
 	}
 
 	options := &minio.Options{
-		Creds:     creds,
-		Secure:    secure,
-		Transport: rt,
+	        Creds:     creds,
+	        Secure:    secure,
+	        Transport: rt,
 	}
 	if customRegion != "" {
-		options.Region = customRegion
+	        options.Region = customRegion
 	} else if r := s3utils.GetRegionFromURL(*u); r != "" {
-		options.Region = r
+	        options.Region = r
+	}
+
+	if other.Val("path_style").Bool() || other.Val("force_path_style").Bool() {
+	        options.BucketLookup = minio.BucketLookupPath
 	}
 
 	c, err := minio.NewCore(endpoint, options)
