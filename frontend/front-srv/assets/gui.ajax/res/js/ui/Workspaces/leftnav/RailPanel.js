@@ -19,6 +19,7 @@
  */
 
 import React, {useState, useEffect, Fragment} from 'react'
+import ReactDOM from 'react-dom'
 
 const PropTypes = require('prop-types');
 const Pydio = require('pydio')
@@ -364,7 +365,7 @@ let RailPanel = ({
                 setActivePanel('superset');
                 setHover(false);
             },
-            activeBar: supersetBar
+            activeBar: null
         },
         {
             id: 'notifications',
@@ -625,6 +626,36 @@ let RailPanel = ({
                         </div>
                     }
                 </div>
+
+                {activePanel === 'superset' && ReactDOM.createPortal(
+                    <div
+                        id={"superset-fullscreen-overlay"}
+                        style={{
+                            position: 'fixed',
+                            left: railWidth,
+                            top: 0,
+                            right: 0,
+                            bottom: 0,
+                            zIndex: 9999,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            background: muiTheme.palette.mui3['surface'] || '#fff'
+                        }}
+                    >
+                        {supersetUrl ? (
+                            <iframe
+                                title={"Superset"}
+                                src={supersetUrl}
+                                style={{flex: 1, width: '100%', height: '100%', border: 0}}
+                            />
+                        ) : (
+                            <div style={{padding: 32, fontSize: 16, color: muiTheme.palette.mui3['on-surface-variant']}}>
+                                Configure <code>gui.ajax/SUPERSET_URL</code> to display Superset here.
+                            </div>
+                        )}
+                    </div>,
+                    document.body
+                )}
             </div>
     )
 
