@@ -1,0 +1,41 @@
+--- a/Chart.yaml
++++ b/Chart.yaml
+@@ -60,4 +60,4 @@
+ sources:
+ - https://github.com/pydio/cells
+ type: application
+-version: 0.1.5
++version: 0.1.6
+--- a/values.yaml
++++ b/values.yaml
+@@ -71,6 +71,9 @@
+ install:
+   frontendLogin: admin
+   frontendPassword: ""
++  frontendPasswordSecret:
++    name: ""
++    key: frontend-password
+   datasource:
+     type: S3
+     endpoint:
+--- a/templates/configmap.yaml
++++ b/templates/configmap.yaml
+@@ -76 +76 @@
+-    frontendpassword: {{ .Values.install.frontendPassword | quote }}
++    frontendpassword: {{ if .Values.install.frontendPasswordSecret.name }}"{$PYDIO_FRONTEND_PASSWORD}"{{ else }}{{ required "install.frontendPassword or install.frontendPasswordSecret.name is required" .Values.install.frontendPassword | quote }}{{ end }}
+--- a/templates/deployment.yaml
++++ b/templates/deployment.yaml
+@@ -231,6 +231,13 @@
+           env:
+             - name: CELLS_INSTALL_YAML
+               value: /var/cells-install/install-conf.yaml
++            {{- if .Values.install.frontendPasswordSecret.name }}
++            - name: PYDIO_FRONTEND_PASSWORD
++              valueFrom:
++                secretKeyRef:
++                  name: {{ .Values.install.frontendPasswordSecret.name | quote }}
++                  key: {{ required "install.frontendPasswordSecret.key is required" .Values.install.frontendPasswordSecret.key | quote }}
++            {{- end }}
+             {{- if .Values.objectStorage.enabled }}
+             - name: OBC_BUCKET_HOST
+               valueFrom:
