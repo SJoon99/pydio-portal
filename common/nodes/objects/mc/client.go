@@ -105,6 +105,10 @@ func New(endpoint, accessKey, secretKey, signatureVersion string, secure bool, c
 		options.Region = r
 	}
 
+	if other.Val("path_style").Bool() || other.Val("force_path_style").Bool() {
+		options.BucketLookup = minio.BucketLookupPath
+	}
+
 	c, err := minio.NewCore(endpoint, options)
 	if err != nil {
 		return nil, err

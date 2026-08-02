@@ -1,0 +1,9 @@
+ARG UPSTREAM_IMAGE=pydio/cells:4.4.17
+FROM ${UPSTREAM_IMAGE}
+
+ARG SOURCE_REVISION
+LABEL org.opencontainers.image.source="https://github.com/SJoon99/pydio-portal" \
+      org.opencontainers.image.revision="${SOURCE_REVISION}" \
+      org.opencontainers.image.version="4.4.17-datax-pathstyle.1"
+
+COPY cells-linux /opt/pydio/bin/cells

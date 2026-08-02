@@ -22,6 +22,7 @@ package object
 
 import (
 	"fmt"
+	"net/url"
 	"path"
 	"strconv"
 	"strings"
@@ -49,6 +50,8 @@ const (
 	StorageKeyJsonCredentials  = "jsonCredentials"
 	StorageKeyStorageClass     = "storageClass"
 	StorageKeySignatureVersion = "signatureVersion"
+	StorageKeyPathStyle        = "path_style"
+	StorageKeyForcePathStyle   = "force_path_style"
 
 	StorageKeyCellsInternal    = "cellsInternal"
 	StorageKeyInitFromBucket   = "initFromBucket"
@@ -61,26 +64,38 @@ const (
 
 func (d *DataSource) ClientConfig() configx.Values {
 	cfg := configx.New()
+	endpoint := d.BuildUrl()
+	secure := d.GetObjectsSecure()
 	_ = cfg.Val("type").Set("mc")
 	if d.StorageType == StorageType_AZURE {
 		_ = cfg.Val("type").Set("azure")
 	}
-	_ = cfg.Val("endpoint").Set(d.BuildUrl())
-	_ = cfg.Val("key").Set(d.GetApiKey())
-	_ = cfg.Val("secret").Set(d.GetApiSecret())
-	_ = cfg.Val("secure").Set(d.GetObjectsSecure())
-	_ = cfg.Val("minioServer").Set(d.ServerIsMinio())
 	if d.StorageConfiguration != nil {
 		if r, o := d.StorageConfiguration[StorageKeyCustomRegion]; o && r != "" {
 			_ = cfg.Val("region").Set(r)
 		}
 		if ce, o := d.StorageConfiguration[StorageKeyCustomEndpoint]; o && ce != "" {
 			_ = cfg.Val(StorageKeyCustomEndpoint).Set(ce)
+			if u, err := url.Parse(ce); err == nil && u.Host != "" {
+				endpoint = u.Host
+				secure = u.Scheme != "http"
+			}
 		}
 		if sv, o := d.StorageConfiguration[StorageKeySignatureVersion]; o && sv != "" {
 			_ = cfg.Val("signature").Set(sv)
 		}
+		if ps, o := d.StorageConfiguration[StorageKeyPathStyle]; o {
+			_ = cfg.Val(StorageKeyPathStyle).Set(ps == "true")
+		}
+		if fps, o := d.StorageConfiguration[StorageKeyForcePathStyle]; o {
+			_ = cfg.Val(StorageKeyForcePathStyle).Set(fps == "true")
+		}
 	}
+	_ = cfg.Val("endpoint").Set(endpoint)
+	_ = cfg.Val("key").Set(d.GetApiKey())
+	_ = cfg.Val("secret").Set(d.GetApiSecret())
+	_ = cfg.Val("secure").Set(secure)
+	_ = cfg.Val("minioServer").Set(d.ServerIsMinio())
 	return cfg
 }
 
@@ -122,11 +137,9 @@ func (d *DataSource) ConfigurationByKey(k string) (string, bool) {
 
 func (d *MinioConfig) ClientConfig() configx.Values {
 	cfg := configx.New()
+	endpoint := d.BuildUrl()
+	secure := d.GetRunningSecure()
 	_ = cfg.Val("type").Set("mc")
-	_ = cfg.Val("endpoint").Set(d.BuildUrl())
-	_ = cfg.Val("key").Set(d.GetApiKey())
-	_ = cfg.Val("secret").Set(d.GetApiSecret())
-	_ = cfg.Val("secure").Set(d.GetRunningSecure())
 	if d.StorageType == StorageType_LOCAL {
 		_ = cfg.Val("minioServer").Set(true)
 	} else if d.StorageType == StorageType_AZURE {
@@ -141,11 +154,25 @@ func (d *MinioConfig) ClientConfig() configx.Values {
 		}
 		if ce, o := d.GatewayConfiguration[StorageKeyCustomEndpoint]; o && ce != "" {
 			_ = cfg.Val("customEndpoint").Set(ce)
+			if u, err := url.Parse(ce); err == nil && u.Host != "" {
+				endpoint = u.Host
+				secure = u.Scheme != "http"
+			}
 		}
 		if sv, o := d.GatewayConfiguration[StorageKeySignatureVersion]; o && sv != "" {
 			_ = cfg.Val("signature").Set(sv)
 		}
+		if ps, o := d.GatewayConfiguration[StorageKeyPathStyle]; o {
+			_ = cfg.Val(StorageKeyPathStyle).Set(ps == "true")
+		}
+		if fps, o := d.GatewayConfiguration[StorageKeyForcePathStyle]; o {
+			_ = cfg.Val(StorageKeyForcePathStyle).Set(fps == "true")
+		}
 	}
+	_ = cfg.Val("endpoint").Set(endpoint)
+	_ = cfg.Val("key").Set(d.GetApiKey())
+	_ = cfg.Val("secret").Set(d.GetApiSecret())
+	_ = cfg.Val("secure").Set(secure)
 	return cfg
 }
 

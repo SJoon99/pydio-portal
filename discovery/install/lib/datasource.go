@@ -22,6 +22,7 @@ package lib
 
 import (
 	"fmt"
+	"net/url"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -159,6 +160,17 @@ func addDatasourceS3(c *install.InstallConfig) (*object.DataSource, error) {
 	}
 	if c.GetDsS3Custom() != "" {
 		conf.StorageConfiguration[object.StorageKeyCustomEndpoint] = c.GetCleanDsS3Custom()
+		conf.StorageConfiguration[object.StorageKeyPathStyle] = "true"
+		conf.StorageConfiguration[object.StorageKeyForcePathStyle] = "true"
+		if u, e := url.Parse(c.GetCleanDsS3Custom()); e == nil {
+			conf.ObjectsHost = u.Hostname()
+			if p := u.Port(); p != "" {
+				if parsed, pe := strconv.ParseInt(p, 10, 32); pe == nil {
+					conf.ObjectsPort = int32(parsed)
+				}
+			}
+			conf.ObjectsSecure = u.Scheme == "https"
+		}
 		if c.GetDsS3CustomRegion() != "" {
 			conf.StorageConfiguration[object.StorageKeyCustomRegion] = c.GetDsS3CustomRegion()
 		}
